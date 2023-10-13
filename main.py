@@ -12,6 +12,18 @@ def home():
 def fri():
     return render_template('fri.html')
 
+@app.route("/fri/inf")
+def inf():
+    return render_template('INF.html')
+
+@app.route("/fri/mat")
+def mat():
+    return render_template('MAT.html')
+
+@app.route("/fri/anj")
+def anj():
+    return render_template('ANJ.html')
+
 
 @app.route("/feit")
 def feit():

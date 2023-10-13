@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <title>Uniza Forum</title>
-    {% block head %}
+    {% block basehead %}
     {% endblock %}
 </head>
 <body>
-    <ul>
-        <il><a href="/">Domov</a></il>
-        <il><a href="/fri">FRI</a></il>
-        <il><a href="/feit">FEIT</a></il>
-    </ul>
-    {% block body %}
+    <nav>
+        <ul>
+            <il><a href="/">Domov</a></il>
+            <il><a href="/fri">FRI</a></il>
+            <il><a href="/feit">FEIT</a></il>
+        </ul>
+    </nav>
+    {% block basebody %}
     {% endblock %}
 </body>
 </html>
