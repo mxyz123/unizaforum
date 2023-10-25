@@ -65,6 +65,9 @@ button.expandNav {
         font-size:45px;
         background-color:black;
         z-index:10;
+        position: sticky;
+        top:0%;
+        left:0%;
     }
 
     .formContentPhone{
@@ -90,13 +93,6 @@ button.expandNav {
         text-decoration-line: underline;
         font-size:100px;
     }
-
-    .navPhone{
-        position: sticky;
-        width: 100%;
-        top: 0;
-        left: 0;
-    }
 }
 
 .navIcon {
@@ -104,3 +100,43 @@ button.expandNav {
     height:100%;
 }
 
+.homeTable{
+    border-style:solid;
+    border-color:black;
+    backdrop-filter: blur(5px);
+    border-radius: 15px;
+}
+
+.post{
+    border-style:solid;
+    border-color:black;
+    border-radius: 5px;
+    padding:15px;
+    margin:20px;
+    text-align:left;
+}
+
+.postTitle{
+    text-decoration-line: underline;
+    color:red;
+    text-align:left;
+}
+
+img.postImage{
+    width:20%;
+    height:auto;
+    float:right;
+}
+
+.submitPost{
+    display: flex;
+    justify-content: center;
+}
+
+.submitBorder{
+    border-style:solid;
+    border-color:black;
+    border-radius: 5px;
+    padding:5px;
+    margin:5px;
+}
