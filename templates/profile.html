@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block basehead %}
+
+{% endblock %}
+
+{% block basebody %}
+<h1>{{username}}</h1><br>
+<img src="{{ url_for('static', filename='pfp/' ~ username ~ '.png') }}" alt="pfp" width="200" height="200">
+{% endblock %}

@@ -5,7 +5,7 @@
 
 {% block basebody %}
     <div class="myCenter">
-        <form>
+        <form id="regForm" action="{{ url_for('register') }}" method="POST">
             <label class="formContentPhone">Meno</label><br>
             <input type="text" id="meno" name="meno" class="formContentPhone"><br><br>
             <label class="formContentPhone">E-mail</label><br>
@@ -14,7 +14,7 @@
             <input type="password" id="password" name="password" class="formContentPhone"><br><br>
             <label class="formContentPhone">Overenie hesla</label><br>
             <input type="password" id="password2" name="password2" class="formContentPhone"><br><br>
-            <button class="formContentPhone">Registrovať sa</button><br>
+            <button type="button" class="formContentPhone" onclick="register();">Registrovať sa</button><br>
         </form>
     </div>
 {% endblock %}
