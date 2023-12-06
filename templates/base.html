@@ -18,13 +18,16 @@
             </button>
             <div class="navbar-collapse collapse" id="toggleNavTarget">
                 <ul class="navbar-nav">
-                    <li class="nav-item navPhone "><a class="whiteVis nav-link" href="/">[Domov]</a></li>
-                    <li class="nav-item navPhone"><a class="whiteVis nav-link" href="/fri">[FRI]</a></li>
+                    <li class="nav-item navPhone "><a class="whiteTxt whiteVis nav-link" href="/">[Domov]</a></li>
+                    <li class="nav-item navPhone"><a class="whiteTxt whiteVis nav-link" href="/fri">[FRI]</a></li>
                     {% if not current_user.is_authenticated %}
-                    <li class="nav-item navPhone"><a class="whiteVis nav-link" href="/login">[Prihlásiť sa]</a></li>
+                    <li class="nav-item navPhone"><a class="whiteTxt whiteVis nav-link" href="/login">[Prihlásiť sa]</a></li>
                     {% else %}
-                    <li class="nav-item navPhone"><a class="whiteVis nav-link" href="/profile/{{ current_user.username }}">[Profil]</a></li>
-                    <li class="nav-item navPhone"><a class="whiteVis nav-link" href="/logout">[Odhlásiť sa]</a></li>
+                    <li class="nav-item navPhone mr-auto"><a class="whiteTxt whiteVis nav-link" href="/profile">[Profil]</a></li>
+                    {% if current_user.admin == True %}
+                    <li class="nav-item navPhone mr-auto"><a class="whiteTxt whiteVis nav-link" href="/admin">[Admin panel]</a></li>
+                    {% endif %}
+                    <li class="nav-item navPhone mr-auto"><a class="whiteTxt whiteVis nav-link" href="/logout">[Odhlásiť sa]</a></li>
                     {% endif %}
                 </ul>
             </div>

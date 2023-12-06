@@ -25,3 +25,11 @@ function register() {
     }
     document.getElementById("regForm").submit();
 }
+
+function deleteUser(username) {
+    window.location.href = document.location.origin + "/admin/delete/" + username;
+}
+
+function editBtn(username) {
+    window.location.href = document.location.origin + "/profile/edit";
+}

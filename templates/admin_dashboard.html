@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block basehead %}
+
+{% endblock %}
+
+{% block basebody %}
+
+<div class="myCenter">
+    <h1>Uživatelia</h1><br>
+    <div class="scrollableDiv">
+        {% for _user in users %}
+        <p>Meno:{{_user.username}} E-mail:{{_user.email}} Admin:{{_user.admin}} Vytvorené:{{_user.date}}
+        {% if _user.admin == False%}
+        <button onclick="deleteUser('{{_user.username}}');">[Zmazať]</button>
+        {% endif %}</p>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

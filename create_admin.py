@@ -11,8 +11,8 @@ if __name__ == '__main__':
     mydb = sqlite3.connect("instance/uniza_forum.db")
     cur = mydb.cursor()
     if not len(sys.argv) < 4:
-        cur.execute(f"INSERT into USER (email, username, pswd, admin) "
-                    f"VALUES ('{sys.argv[2]}', '{sys.argv[1]}', '{encrypt(sys.argv[3])}', TRUE);")
+        cur.execute(f"INSERT into USER (email, username, pswd, admin, gif) "
+                    f"VALUES ('{sys.argv[2]}', '{sys.argv[1]}', '{encrypt(sys.argv[3])}', TRUE, FALSE);")
         mydb.commit()
         mydb.close()
         copy("static/pfp/pfp_.png", f"static/pfp/{sys.argv[1]}.png")
