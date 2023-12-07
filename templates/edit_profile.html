@@ -1,13 +1,17 @@
 {% extends "base.html" %}
 {% block basehead %}
-
+{% if hasErr %}
+<script>
+    error_handler({{ errCode }});
+</script>
+{% endif %}
 {% endblock %}
 
 {% block basebody %}
-<div class="myCenter">
+<div class="myCenter scrollableDiv">
     <form id="editForm" action="{{ url_for('edit_profile') }}" method="POST" enctype="multipart/form-data">
         <label class="formContentPhone">[Zmeniť profilový obrázok]</label><br>
-        <input type="file" name="file" accept=".gif,.jpg,.jpeg,.png"/><br><br>
+        <input class="formContentPhone" type="file" id="file" name="file" accept=".gif,.jpg,.jpeg,.png"/><br><br>
         <label class="formContentPhone">[Zmeniť heslo]</label><br>
         <label class="formContentPhone">Aktuálne heslo</label><br>
         <input class="formContentPhone" type="password" id="pswd" name="pswd"><br>
@@ -15,7 +19,12 @@
         <input class="formContentPhone" type="password" id="newPswd" name="newPswd"><br><br>
         <label class="formContentPhone">[Zmeniť popisok]</label><br>
         <textarea class="formContentPhone" id="bio" name="bio" rows="10" cols="40" maxlength="256" style="resize:none;">{% if current_user.bio is not none %}{{current_user.bio}}{% endif %}</textarea><br><br>
-        <button class="formContentPhone">[Upraviť]</button>
-    </form>
+        <label class="formContentPhone" style="color: red;">[Zmazať účet]</label><br>
+        <label class="formContentPhone">Heslo</label><br>
+        <input class="formContentPhone" type="password" id="password" name="password"><br>
+        <label class="formContentPhone">Zopakovať heslo</label><br>
+        <input class="formContentPhone" type="password" id="password2" name="password2"><br><br>
+        <button type="button" onclick="editProfile();" class="formContentPhone">[Upraviť]</button>
+    </form><br>
 </div>
 {% endblock %}

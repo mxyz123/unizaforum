@@ -9,7 +9,14 @@ a {
 
 .scrollableDiv {
     overflow-y:scroll;
-    height:500px;
+    height:90%;
+    margin-top:2%;
+    padding: 10px;
+}
+
+.pfp {
+    width: 200px;
+    height: 200px;
 }
 
 .whiteTxt {
@@ -17,6 +24,10 @@ a {
 }
 
 a:visited.whiteVis {
+    color:white;
+}
+
+a:link.whiteVis {
     color:white;
 }
 
@@ -60,6 +71,16 @@ button.expandNav {
 @media only screen and (min-device-width : 320px) and (max-device-width : 820px){
     .nahlad{
         width:100%;
+    }
+
+    .pfp {
+        width:80%;
+        height:100%;
+        aspect-ratio: 1 / 1;
+    }
+
+    .admin_dash {
+        height: 30px;
     }
 
     .phoneText{

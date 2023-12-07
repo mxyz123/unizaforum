@@ -4,17 +4,17 @@
 {% endblock %}
 
 {% block basebody %}
-<h1>{% if isAdmin %}<span style="color: red;">[ADMIN]</span> {% endif %}{{username}}</h1><br>
+<h1 class="formContentPhone">{% if isAdmin %}<span style="color: red;">[ADMIN]</span> {% endif %}{{username}}</h1><br>
 {% if not hasGif %}
-<img src="{{ url_for('static', filename='pfp/' ~ username ~ '.png') }}" alt="pfp" width="200" height="200"><br><br>
+<img class="pfp" src="{{ url_for('static', filename='pfp/' ~ username ~ '.png') }}" alt="pfp"><br><br>
 {% else %}
-<img src="{{ url_for('static', filename='pfp/' ~ username ~ '.gif') }}" alt="pfp" width="200" height="200"><br><br>
+<img class="pfp" src="{{ url_for('static', filename='pfp/' ~ username ~ '.gif') }}" alt="pfp"><br><br>
 {% endif %}
 <label class="formContentPhone">Vytvorené:</label><br>
 <label class="formContentPhone">{{crDate}}</label><br><br>
 <label class="formContentPhone">Popis:</label><br>
 <label class="formContentPhone">{% if bio is not none %}{{bio}}{% endif %}</label><br><br>
 {% if current_user.username == username %}
-<button onclick="editBtn('{{current_user.username}}');">[Upraviť]</button>
+<button class="formContentPhone" onclick="editBtn('{{current_user.username}}');">[Upraviť]</button>
 {% endif %}
 {% endblock %}

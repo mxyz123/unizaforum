@@ -1,16 +1,20 @@
 {% extends "base.html" %}
 {% block basehead %}
-
+{% if hasErr %}
+<script>
+    error_handler({{ errCode }});
+</script>
+{% endif %}
 {% endblock %}
 
 {% block basebody %}
   <div class="myCenter">
-    <form action="{{ url_for('login') }}" method="POST">
+    <form id="logForm" action="{{ url_for('login') }}" method="POST">
       <label class="formContentPhone">E-mail</label><br>
       <input class="formContentPhone" type="email" id="email" name="email"><br><br>
       <label class="formContentPhone">Heslo</label><br>
       <input class="formContentPhone" type="password" id="password" name="password"><br><br>
-      <button class="formContentPhone">Prihlásiť sa</button><br><br>
+      <button type="button" class="formContentPhone" onclick="login();">Prihlásiť sa</button><br><br>
     </form>
     <div class="formContentPhone">
       Ešte nemáte účet? <a href="/register">Registrujte sa!</a>

@@ -1,12 +1,12 @@
 import datetime
-
+import re
 import flask
 from flask import Flask, render_template, request, redirect
 import logging
 import os
 from logging.handlers import RotatingFileHandler
 from time import strftime
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String, Boolean, Integer, DateTime
 from sqlalchemy.orm import DeclarativeBase
@@ -99,29 +99,51 @@ def feit():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        if not (request.form["email"] == '' or request.form["password"] == ''):
-            user = User.query.filter_by(email=request.form["email"]).first()
-            if user:
-                if hashing.compare(request.form["password"], user.pswd):
-                    login_user(user)
+        if request.form["email"] == '':
+            return render_template('login.html', hasErr=True, errCode=1)
+        if request.form["password"] == '':
+            return render_template('login.html', hasErr=True, errCode=2)
+        if current_user.is_authenticated:
+            return render_template('login.html', hasErr=True, errCode=9)
+        user = User.query.filter_by(email=request.form["email"]).first()
+        if user:
+            if hashing.compare(request.form["password"], user.pswd):
+                login_user(user)
+                return render_template("login.html", hasErr=True, errCode=7)
+        else:
+            return render_template('login.html', hasErr=True, errCode=6)
     return render_template('login.html')
 
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        if not (request.form["meno"] == '' or request.form["email"] == '' or request.form["password"] == '' or
-                request.form["password2"] == '' or request.form["password"] != request.form["password2"]):
-            # noinspection PyArgumentList
-            user = User(
-                username=request.form["meno"],
-                email=request.form["email"],
-                pswd=encrypt(request.form["password"])
-            )
-            db.session.add(user)
-            db.session.commit()
-            copy("static/pfp/pfp_.png", f"static/pfp/{user.username}.png")
-            return redirect("/login")
+        if request.form["meno"] == '':
+            return render_template('register.html', hasErr=True, errCode=0)
+        if request.form["email"] == '':
+            return render_template('register.html', hasErr=True, errCode=1)
+        regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
+        if not re.fullmatch(regex, request.form["email"]):
+            return render_template('register.html', hasErr=True, errCode=11)
+        if request.form["password"] == '' or request.form["password2"] == '':
+            return render_template('register.html', hasErr=True, errCode=2)
+        if request.form["password"] != request.form["password2"]:
+            return render_template('register.html', hasErr=True, errCode=3)
+        check = User.query.filter_by(username=request.form["meno"]).first()
+        if check is not None:
+            return render_template('register.html', hasErr=True, errCode=4)
+        check = User.query.filter_by(email=request.form["email"]).first()
+        if check is not None:
+            return render_template('register.html', hasErr=True, errCode=5)
+        user = User(
+            username=request.form["meno"],
+            email=request.form["email"],
+            pswd=encrypt(request.form["password"])
+        )
+        db.session.add(user)
+        db.session.commit()
+        copy("static/pfp/pfp_.png", f"static/pfp/{user.username}.png")
+        return render_template("login.html", hasErr=True, errCode=8)
     return render_template('register.html')
 
 
@@ -150,11 +172,21 @@ def user_profile():
 @login_required
 def edit_profile():
     if request.method == "POST":
-        user = User.query.filter_by(username=current_user.username).first()
-        if not (request.form["pswd"] == '' or request.form["new_pswd"] == ''):
-            if hashing.compare(request.form["pswd"], user.pswd):
-                user.pswd = encrypt(request.form["new_pswd"])
+        if request.form["password"] == request.form["password2"] and request.form["password"] != "":
+            if hashing.compare(request.form["password"], current_user.pswd):
+                db.session.delete(current_user)
                 db.session.commit()
+                logout_user()
+                return redirect("/")
+            else:
+                return render_template('edit_profile.html', hasErr=True, errCode=6)
+        user = User.query.filter_by(username=current_user.username).first()
+        if not (request.form["pswd"] == '' or request.form["newPswd"] == ''):
+            if hashing.compare(request.form["pswd"], user.pswd):
+                user.pswd = encrypt(request.form["newPswd"])
+                db.session.commit()
+            else:
+                return render_template('edit_profile.html', hasErr=True, errCode=6)
         if not request.form['bio'] == '':
             user.bio = request.form['bio']
             db.session.commit()
@@ -177,6 +209,8 @@ def edit_profile():
                         pass
                     user.gif = True
                     db.session.commit()
+                else:
+                    return render_template('edit_profile.html', hasErr=True, errCode=10)
         return redirect("/profile/edit")
     return render_template('edit_profile.html')
 

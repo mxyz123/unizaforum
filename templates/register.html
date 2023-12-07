@@ -1,10 +1,14 @@
 {% extends "base.html" %}
 {% block basehead %}
-
+{% if hasErr %}
+<script>
+    error_handler({{ errCode }});
+</script>
+{% endif %}
 {% endblock %}
 
 {% block basebody %}
-    <div class="myCenter">
+    <div class="myCenter" onload="">
         <form id="regForm" action="{{ url_for('register') }}" method="POST">
             <label class="formContentPhone">Meno</label><br>
             <input type="text" id="meno" name="meno" class="formContentPhone"><br><br>
