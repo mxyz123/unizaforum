@@ -4,3 +4,4 @@ SQLAlchemy~=2.0.23
 waitress~=2.1.2
 Paste~=3.7.1
 rsa~=4.9
+flask-login

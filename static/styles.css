@@ -169,3 +169,8 @@ img.postImage{
     padding:5px;
     margin:5px;
 }
+
+button.centered {
+  margin: 0 auto;
+  display: block;
+}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block basehead %}
+{% if hasErr %}
+<script>
+    error_handler({{ errCode }});
+</script>
+{% endif %}
+<script>
+    $SCRIPT_ROOT = {{ request.script_root|tojson }};
+    $("button#refreshBtn").click(function() {
+        $.getJSON($SCRIPT_ROOT + "/_get_threads/{{ subName|lower }}", function() {
+            $.each(result, function(i, field) {
+               $("#result").append(field + " ");
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% block basebody %}
+    <h1 class="nadpis">{{ subName }}</h1><br>
+    <button id="show_thread_form_btn" type="button" class="formContentPhone centered" onclick="show_hide_thread_form();"
+    >[Nové vlákno]</button>
+    <div class="submitPost phoneText" id="thread_form_div" style="display: none;">
+        <form class="submitBorder" id="new_thread_form" method="POST" enctype="multipart/form-data"
+              action="/{{ subName|lower }}/create_thread">
+            <button type="button" class="formContentPhone" onclick="show_hide_thread_form();">[X]</button><br>
+            <label for="message">Správa</label><br>
+            <textarea id="message" name="message" rows="5" cols="40" placeholder="Sem píš..." style="resize:none;"></textarea>
+            <br>
+            <label class="formContentPhone">Media</label><br>
+            <input class="formContentPhone" type="file" id="file" name="file" accept=".gif,.jpg,.jpeg,.png"/><br><br>
+            <br>
+            <button type="button" class="formContentPhone" onclick="create_thread();">Vytvoriť</button>
+        </form>
+    </div><br>
+    <br><br>
+    <span id="result"></span>
+    <br><br>
+    <button id="refreshBtn" type="button" class="formContentPhone centered">Refresh</button>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block basehead %}
+{% if hasErr %}
+<script>
+    error_handler({{ errCode }});
+</script>
+{% endif %}
+{% endblock %}
+
+{% block basebody %}
+
+<div class="myCenter">
+    <a class="formContentPhone" href="/admin">Admin panel</a>
+    <form id="subForm" action="{{ url_for('admin_sub') }}" method="POST">
+        <label class="formContentPhone">Názov</label><br>
+        <input class="formContentPhone" type="text" id="name" name="name"><br>
+        <label class="formContentPhone">Skratka</label><br>
+        <input class="formContentPhone" type="text" id="short" name="short"><br>
+        <button type="button" class="formContentPhone" onclick="create_sub();">Vytvoriť</button><br>
+    </form>
+</div>
+
+{% endblock %}

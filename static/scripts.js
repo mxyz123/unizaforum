@@ -18,6 +18,40 @@ function login() {
     document.getElementById("logForm").submit();
 }
 
+function create_sub(){
+    if(document.getElementById("name").value == "") {
+        error_handler(12);
+        return;
+    }
+    if(document.getElementById("short").value == "") {
+        error_handler(14);
+        return;
+    }
+    document.getElementById("subForm").submit();
+}
+
+function create_thread(){
+    if(document.getElementById("message").value == "" && document.getElementById("file").files.length <= 0) {
+        error_handler(13);
+        return;
+    }
+    if (document.getElementById("file").files.length > 0) {
+        let img = document.getElementById("file").files[0].name;
+        let ext = img.substring(img.lastIndexOf('.')+1, img.length) || img;
+        switch (ext.toLowerCase()) {
+            case 'png':
+            case 'jpg':
+            case 'jpeg':
+            case 'gif':
+                break;
+            default:
+                error_handler(10);
+                return;
+        }
+    }
+    document.getElementById("new_thread_form").submit();
+}
+
 function register() {
     if (document.getElementById("meno").value == "") {
         error_handler(0);
@@ -77,6 +111,18 @@ function editProfile() {
     document.getElementById("editForm").submit();
 }
 
+function show_hide_thread_form(){
+    var btn = document.getElementById("show_thread_form_btn");
+    var frm = document.getElementById("thread_form_div");
+    if (btn.style.display === "none") {
+        btn.style.display = "";
+        frm.style.display = "none";
+    } else {
+        btn.style.display = "none";
+        frm.style.display = "";
+    }
+}
+
 function error_handler(err_code) {
     switch (err_code) {
         case 0:
@@ -98,25 +144,40 @@ function error_handler(err_code) {
             alert("Daný e-mail sa už používa!");
             break;
         case 6:
-            alert("Nesprávne prihlasovacie údaje!")
+            alert("Nesprávne prihlasovacie údaje!");
             break;
         case 7:
-            alert("Prihlásenie prebehlo úspešne!")
+            alert("Prihlásenie prebehlo úspešne!");
             break;
         case 8:
-            alert("Registrácia prebehla úspešne!")
+            alert("Registrácia prebehla úspešne!");
             break;
         case 9:
-            alert("Účet je už prihlásený!")
+            alert("Účet je už prihlásený!");
             break;
         case 10:
-            alert("Nepodporovaný typ súboru!")
+            alert("Nepodporovaný typ súboru!");
             break;
         case 11:
-            alert("Naplatný e-mail!")
+            alert("Naplatný e-mail!");
+            break;
+        case 12:
+            alert("Prázdny názov!");
+            break;
+        case 13:
+            alert("Prázdny text!");
+            break;
+        case 14:
+            alert("Prázdna skratka!");
+            break;
+        case 15:
+            alert("Meno sub-fóra už existuje!");
+            break;
+        case 16:
+            alert("Skratka sub-fóra už existuje!");
             break;
         default:
-            alert("Chyba!")
+            alert("Chyba!");
             return;
     }
 }

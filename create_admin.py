@@ -12,9 +12,18 @@ if __name__ == '__main__':
     cur = mydb.cursor()
     if not len(sys.argv) < 4:
         cur.execute(f"INSERT into USER (email, username, pswd, admin, gif) "
-                    f"VALUES ('{sys.argv[2]}', '{sys.argv[1]}', '{encrypt(sys.argv[3])}', TRUE, FALSE);")
+                    f"VALUES ('{sys.argv[1]}', '{sys.argv[2]}', '{encrypt(sys.argv[3])}', TRUE, FALSE);")
         mydb.commit()
         mydb.close()
         copy("static/pfp/pfp_.png", f"static/pfp/{sys.argv[1]}.png")
+        print("Admin account created successfully.")
     else:
-        print("Couldn't create ADMIN account!")
+        email = input("Email: ")
+        username = input("username: ")
+        password = input("password: ")
+        cur.execute(f"INSERT into USER (email, username, pswd, admin, gif) "
+                    f"VALUES ('{email}', '{username}', '{encrypt(password)}', TRUE, FALSE);")
+        mydb.commit()
+        mydb.close()
+        copy("static/pfp/pfp_.png", f"static/pfp/{username}.png")
+        print("Admin account created successfully.")

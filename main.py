@@ -1,14 +1,15 @@
 import datetime
 import re
 import flask
-from flask import Flask, render_template, request, redirect
+import uuid
+from flask import Flask, render_template, request, redirect, jsonify
 import logging
 import os
 from logging.handlers import RotatingFileHandler
 from time import strftime
 from flask import Flask, render_template, request, redirect, session
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import String, Boolean, Integer, DateTime
+from sqlalchemy import String, Boolean, Integer, DateTime, select, table, column
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
@@ -51,14 +52,22 @@ class User(db.Model, UserMixin):
 class Post(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     message: Mapped[str] = mapped_column(String, nullable=True)
-    image: Mapped[str] = mapped_column(String, nullable=True)
+    media: Mapped[str] = mapped_column(String, nullable=True)
     thread_id: Mapped[int] = mapped_column(Integer, nullable=False)
     date: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class Thread(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    subforum_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    main_post_id: Mapped[int] = mapped_column(Integer, nullable=True)
     date: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class SubForum(db.Model):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    short: Mapped[str] = mapped_column(String, nullable=False, unique=True)
 
 
 @login_manager.user_loader
@@ -71,29 +80,47 @@ def home():
     return render_template('home.html')
 
 
-@app.route("/fri")
-def fri():
-    return render_template('fri.html')
+@app.route("/_get_threads/<string:sub_name>")
+def get_threads(sub_name):
+    threads = []
+    sub_forum = SubForum.query.filter_by(name=sub_name.lower()).first()
+    response = Thread.query.filter_by(subforum_id=sub_forum.id).all()
+    for r in response:
+        threads.append({'id': str(r.id), 'subforum_id': str(r.subforum_id), 'main_post_id': str(r.main_post_id),
+                        'date': str(r.date)})
+    print(threads)
+    return jsonify({'result': threads})
 
 
-@app.route("/fri/inf")
-def inf():
-    return render_template('INF.html')
+@app.route("/<string:sub_name>")
+def subforum(sub_name):
+    check = SubForum.query.filter_by(name=sub_name).first()
+    if check is None:
+        flask.abort(404)
+    return render_template('subforum.html', subName=sub_name.upper())
 
 
-@app.route("/fri/mat")
-def mat():
-    return render_template('MAT.html')
-
-
-@app.route("/fri/anj")
-def anj():
-    return render_template('ANJ.html')
-
-
-@app.route("/feit")
-def feit():
-    return render_template('feit.html')
+@app.route("/admin/create_sub", methods=["GET", "POST"])
+def admin_sub():
+    if not current_user.admin:
+        flask.abort(404)
+    if request.method == "POST":
+        if request.form["name"] == '':
+            return render_template('admin_thread.html', hasErr=True, errCode=12)
+        if request.form["short"] == '':
+            return render_template('admin_thread.html', hasErr=True, errCode=14)
+        check = SubForum.query.filter_by(name=request.form["name"]).first()
+        if check is not None:
+            return render_template('admin_thread.html', hasErr=True, errCode=15)
+        check = SubForum.query.filter_by(short=request.form["short"]).first()
+        if check is not None:
+            return render_template('admin_thread.html', hasErr=True, errCode=16)
+        sub = SubForum(name=request.form["name"], short=request.form["short"])
+        db.session.add(sub)
+        db.session.commit()
+        timestamp = strftime('[%Y-%b-%d %H:%M]')
+        print(f'{timestamp} Sub forum {sub.name} created.')
+    return render_template('admin_thread.html')
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -113,6 +140,44 @@ def login():
         else:
             return render_template('login.html', hasErr=True, errCode=6)
     return render_template('login.html')
+
+
+def create_post(message, thread_id, f):
+    unique_filename = str(uuid.uuid4().hex)
+    media = None
+    if not f.filename == "":
+        if f.filename.endswith('.png') or f.filename.endswith('.jpg') or f.filename.endswith('.jpeg'):
+            f.save(f"static/media/{unique_filename}.png")
+            media = f"{unique_filename}.png"
+        elif f.filename.endswith('.gif'):
+            f.save(f"static/media/{unique_filename}.gif")
+            media = f"{unique_filename}.gif"
+    new_post = Post(message=message, thread_id=thread_id, media=media)
+    db.session.add(new_post)
+    db.session.commit()
+    return new_post.id
+
+
+@app.route("/post", methods=["GET", "POST"])
+def post():
+    pass
+
+
+@app.route("/<string:sub_name>/create_thread", methods=["GET", "POST"])
+def create_thread(sub_name):
+    check = SubForum.query.filter_by(name=sub_name).first()
+    if check is None:
+        flask.abort(404)
+    if request.method == "POST":
+        if request.form["message"] == '' and len(request.files) <= 0:
+            return render_template('subforum.html', subName=sub_name.upper(), hasErr=True, errCode=13)
+        _sub_forum = SubForum.query.filter_by(name=sub_name).first()
+        new_thread = Thread(subforum_id=_sub_forum.id)
+        db.session.add(new_thread)
+        db.session.commit()
+        _sub_forum.main_post_id = create_post(request.form["message"], _sub_forum.id, request.files['file'])
+        db.session.commit()
+    return redirect(f"/{sub_name}")
 
 
 @app.route("/register", methods=["GET", "POST"])
