@@ -54,6 +54,7 @@ class Post(db.Model):
     message: Mapped[str] = mapped_column(String, nullable=True)
     media: Mapped[str] = mapped_column(String, nullable=True)
     thread_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    creator: Mapped[str] = mapped_column(String, nullable=False)
     date: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -92,7 +93,8 @@ def get_threads(sub_name):
         if r.main_post_id is not None:
             main_post = Post.query.filter_by(id=r.main_post_id).first()
             threads.append({'id': str(r.id), 'subforum_id': str(r.subforum_id), 'message': str(main_post.message),
-                            'media': str(main_post.media), 'date': str(r.date)})
+                            'media': str(main_post.media), 'date': str(r.date), 'creator': str(main_post.creator)
+                            })
     return jsonify(threads)
 
 
@@ -111,12 +113,13 @@ def get_posts(sub_name, thread_id):
     for p in posts:
         response.append({
             'id': str(p.id), 'thread_id': str(p.thread_id), 'message': str(p.message), 'media': str(p.media),
-            'date': str(p.date)
+            'date': str(p.date), 'creator': str(p.creator)
         })
     return jsonify(response)
 
 
 @app.route("/<string:sub_name>/<string:thread_id>/create_post", methods=["GET", "POST"])
+@login_required
 def post(sub_name, thread_id):
     check1 = SubForum.query.filter_by(name=sub_name).first()
     check2 = Thread.query.filter_by(id=thread_id).first()
@@ -130,12 +133,71 @@ def post(sub_name, thread_id):
     return redirect(f'/{sub_name.lower()}/{thread_id}')
 
 
+@app.route("/edit_post/<string:post_id>", methods=["GET", "POST"])
+@login_required
+def edit_post(post_id):
+    p = Post.query.filter_by(id=post_id).first()
+    if current_user.username != p.creator:
+        flask.abort(404)
+    if request.method == "POST":
+        if request.form["edit_msg"] != "":
+            p.message = request.form["edit_msg"]
+        if request.files["edit_file"].filename != "":
+            f = request.files["edit_file"]
+            if p.media is not None:
+                os.remove(f'static/media/{p.media}')
+            unique_filename = str(uuid.uuid4().hex)
+            media = None
+            if f.filename.endswith('.png') or f.filename.endswith('.jpg') or f.filename.endswith('.jpeg'):
+                f.save(f"static/media/{unique_filename}.png")
+                media = f"{unique_filename}.png"
+            elif f.filename.endswith('.gif'):
+                f.save(f"static/media/{unique_filename}.gif")
+                media = f"{unique_filename}.gif"
+            p.media = media
+        db.session.commit()
+    t = Thread.query.filter_by(id=p.thread_id).first()
+    sub = SubForum.query.filter_by(id=t.subforum_id).first()
+    return redirect(f'/{sub.name}/{t.id}')
+
+
+@app.route("/_delete_post/<string:sub_name>/<string:thread_id>/<string:post_id>", methods=["GET", "POST"])
+@login_required
+def delete_post(sub_name, thread_id, post_id):
+    p = Post.query.filter_by(id=int(post_id)).first()
+    print(p.id)
+    if current_user.username == p.creator or current_user.admin:
+        try:
+            t = Thread.query.filter_by(main_post_id=p.id).first()
+            if t is not None:
+                posts = Post.query.filter_by(thread_id=t.id).all()
+                for po in posts:
+                    if po.id != p.id:
+                        if po.media != "None":
+                            os.remove(f"static/media/{po.media}")
+                        db.session.delete(po)
+                db.session.delete(t)
+        except:
+            pass
+        os.remove(f"static/media/{p.media}")
+        db.session.delete(p)
+        db.session.commit()
+    return redirect(f'/{sub_name.lower()}/{thread_id}')
+
+
 @app.route("/<string:sub_name>/<string:thread_id>")
 def thread(sub_name, thread_id):
+    try:
+        t = Thread.query.filter_by(id=thread_id).first()
+        if t is None:
+            flask.abort(404)
+    except:
+        flask.abort(404)
     return render_template('thread.html', sub_name=sub_name.upper(), thread_id=thread_id)
 
 
 @app.route("/admin/create_sub", methods=["GET", "POST"])
+@login_required
 def admin_sub():
     if not current_user.admin:
         flask.abort(404)
@@ -187,13 +249,14 @@ def create_post(message, thread_id, f):
         elif f.filename.endswith('.gif'):
             f.save(f"static/media/{unique_filename}.gif")
             media = f"{unique_filename}.gif"
-    new_post = Post(message=message, thread_id=thread_id, media=media)
+    new_post = Post(message=message, thread_id=thread_id, media=media, creator=current_user.username)
     db.session.add(new_post)
     db.session.commit()
     return new_post.id
 
 
 @app.route("/<string:sub_name>/create_thread", methods=["GET", "POST"])
+@login_required
 def create_thread(sub_name):
     check = SubForum.query.filter_by(name=sub_name).first()
     if check is None:
@@ -256,11 +319,52 @@ def profile(username):
                            crDate=user.date, bio=user.bio)
 
 
+@app.route("/admin/delete_thread", methods=["GET", "POST"])
+@login_required
+def admin_delete_thread():
+    if current_user.admin is True and request.method == "POST":
+        if request.form["name"] == "":
+            return render_template("delete_thread.html", hasErr=True, errCode=10)
+        t = Thread.query.filter_by(id=int(request.form["name"])).first()
+        posts = Post.query.filter_by(thread_id=t.id).all()
+        for p in posts:
+            os.remove(f"static/media/{p.media}")
+            db.session.delete(p)
+        db.session.delete(t)
+        db.session.commit()
+    return render_template("delete_thread.html")
+
+
+@app.route("/admin/delete_sub", methods=["GET", "POST"])
+@login_required
+def admin_delete_sub():
+    if current_user.admin is True and request.method == "POST":
+        if request.form["name"] == "":
+            return render_template("deletesub.html", hasErr=True, errCode=10)
+        s = SubForum.query.filter_by(name=request.form["name"]).first()
+        threads = Thread.query.filter_by(subforum_id=s.id).all()
+        for t in threads:
+            posts = Post.query.filter_by(thread_id=t.id).all()
+            for p in posts:
+                os.remove(f"static/media/{p.media}")
+                db.session.delete(p)
+            db.session.delete(t)
+        db.session.delete(s)
+        db.session.commit()
+    return render_template("deletesub.html")
+
+
 @app.route("/profile")
 @login_required
 def user_profile():
     return render_template('profile.html', username=current_user.username, isAdmin=current_user.admin,
                            hasGif=current_user.gif, crDate=current_user.date, bio=current_user.bio)
+
+
+@app.route("/fora")
+def forums():
+    subs = SubForum.query.all()
+    return render_template('forum.html', forums=subs)
 
 
 @app.route("/profile/edit", methods=["GET", "POST"])
@@ -269,6 +373,10 @@ def edit_profile():
     if request.method == "POST":
         if request.form["password"] == request.form["password2"] and request.form["password"] != "":
             if hashing.compare(request.form["password"], current_user.pswd):
+                if current_user.gif is True:
+                    os.remove(f"static/pfp/{current_user.username}.gif")
+                else:
+                    os.remove(f"static/pfp/{current_user.username}.png")
                 db.session.delete(current_user)
                 db.session.commit()
                 logout_user()

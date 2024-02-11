@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block basehead %}
+{% if hasErr %}
+<script>
+    error_handler({{ errCode }});
+</script>
+{% endif %}
+{% endblock %}
+
+{% block basebody %}
+
+<div class="myCenter">
+    <a class="formContentPhone" href="/admin">Admin panel</a>
+    <form id="subForm" action="{{ url_for('admin_delete_sub') }}" method="POST">
+        <label class="formContentPhone">Názov</label><br>
+        <input class="formContentPhone" type="text" id="name" name="name"><br>
+        <button type="button" class="formContentPhone" onclick="delete_sub();">Zmazať</button><br>
+    </form>
+</div>
+
+{% endblock %}

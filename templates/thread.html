@@ -6,17 +6,87 @@
 </script>
 {% endif %}
 <script>
+    function deletePost(id) {
+            window.location.href = "/_delete_post/{{ sub_name|lower }}/{{ thread_id }}/"+id;
+        }
+
     $(document).ready(function(){
         $SCRIPT_ROOT = {{ request.script_root|tojson }};
 
+        function fetchPosts() {
+            $.ajax({url: $SCRIPT_ROOT + "/_get_posts/{{ sub_name|lower }}/{{ thread_id }}"}).done(function(data) {
+                document.getElementById("threadDiv").textContent = '';
+                for(var i = 0; i < data.length; i++) {
+                    let tdiv = document.createElement("div");
+                    tdiv.classList.add("row");
+                    tdiv.classList.add("post");
+                    tdiv.classList.add("phoneText");
+                    let ca = document.createElement("a");
+                    ca.textContent = "Tvorca: " + data[i].creator;
+                    ca.setAttribute("href", $SCRIPT_ROOT + "/profile/" + data[i].creator);
+                    tdiv.appendChild(ca);
+                    let mdiv = document.createElement("div");
+                    tdiv.appendChild(mdiv);
+                    let tp = document.createElement("div");
+                    tp.classList.add("postText");
+                    if (data[i].media != "None") {
+                        let timg = document.createElement("img");
+                        timg.setAttribute("alt", "nahlad");
+                        timg.classList.add("postImage");
+                        timg.src= $SCRIPT_ROOT + "/static/media/" + data[i].media;
+                        mdiv.appendChild(timg);
+                    }
+                    mdiv.appendChild(tp);
+                    let node = document.createTextNode(data[i].message);
+                    tp.appendChild(node);
+                    tdate = document.createElement("p");
+                    tdate.innerText = "[Čas vytvorenia:" + data[i].date + "]";
+                    tdiv.appendChild(tdate);
+                    crudediv = document.createElement("div");
+                    tdiv.appendChild(crudediv);
+                    if (data[i].creator == "{{ current_user.username }}"){
+                        edit = document.createElement("button");
+                        edit.setAttribute("style", "margin-right: 10px;");
+                        edit.setAttribute("onclick", "show_hide_edit_form(" + data[i].id +",'" + data[i].message + "');");
+                        edit.innerText = "[Upraviť]";
+                        crudediv.appendChild(edit);
+                    }
+                    {% if current_user.admin == True %}
+                    deletebtn = document.createElement("button");
+                    deletebtn.innerText = "[Zmazať]";
+                    deletebtn.setAttribute("onclick", "deletePost(" + data[i].id + ");");
+                    crudediv.appendChild(deletebtn);
+                    {% endif %}
+                    document.getElementById("threadDiv").appendChild(tdiv);
+                }
+            });
+        }
+
+        fetchPosts();
+
         $("button#refreshBtn").click(function() {
+            fetchPosts();
         });
     });
 </script>
 {% endblock %}
 {% block basebody %}
+    <div class="editPost phoneText" id="edit_div" style="display: none;">
+        <form class="submitBorder" id="edit_form" method="POST" enctype="multipart/form-data"
+              action="">
+            <button type="button" class="formContentPhone" onclick="show_hide_edit_form(-1);">[X]</button><br>
+            <label for="message">Správa</label><br>
+            <textarea id="edit_msg" name="edit_msg" rows="5" cols="40" placeholder="Sem píš..." style="resize:none;"></textarea>
+            <br>
+            <label class="formContentPhone">Media</label><br>
+            <input class="formContentPhone" type="file" id="edit_file" name="edit_file" accept=".gif,.jpg,.jpeg,.png"/><br><br>
+            <br>
+            <button type="button" class="formContentPhone" onclick="edit_post();">Upraviť</button>
+        </form>
+    </div>
+    <br>
     <button id="show_thread_form_btn" type="button" class="formContentPhone centered" onclick="show_hide_thread_form();"
-    >[Nové vlákno]</button>
+    >[Nový príspevok]</button>
     <div class="submitPost phoneText" id="thread_form_div" style="display: none;">
         <form class="submitBorder" id="new_thread_form" method="POST" enctype="multipart/form-data"
               action="/{{ sub_name|lower }}/{{ thread_id }}/create_post">

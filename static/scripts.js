@@ -52,6 +52,36 @@ function create_thread(){
     document.getElementById("new_thread_form").submit();
 }
 
+function edit_post(){
+    if(document.getElementById("edit_msg").value == "" && document.getElementById("edit_file").files.length <= 0) {
+        error_handler(13);
+        return;
+    }
+    if (document.getElementById("edit_file").files.length > 0) {
+        let img = document.getElementById("edit_file").files[0].name;
+        let ext = img.substring(img.lastIndexOf('.')+1, img.length) || img;
+        switch (ext.toLowerCase()) {
+            case 'png':
+            case 'jpg':
+            case 'jpeg':
+            case 'gif':
+                break;
+            default:
+                error_handler(10);
+                return;
+        }
+    }
+    document.getElementById("edit_form").submit();
+}
+
+function delete_sub(){
+    if(document.getElementById("name").value == ""){
+        error_handler(13);
+        return;
+    }
+    document.getElementById("subForm").submit();
+}
+
 function register() {
     if (document.getElementById("meno").value == "") {
         error_handler(0);
@@ -120,6 +150,19 @@ function show_hide_thread_form(){
     } else {
         btn.style.display = "none";
         frm.style.display = "";
+    }
+}
+
+function show_hide_edit_form(id, txt){
+    var frm = document.getElementById("edit_div");
+    if (frm.style.display === "none") {
+        frm.style.display = "";
+        document.getElementById("edit_form").setAttribute("action", "/edit_post/"+id);
+        document.getElementById("edit_msg").textContent = txt;
+        window.scrollTo(0,0);
+    } else {
+        frm.style.display = "none";
+        document.getElementById("edit_form").setAttribute("action", "");
     }
 }
 

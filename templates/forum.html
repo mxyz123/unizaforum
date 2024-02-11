@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block basehead %}
+
+{% endblock %}
+{% block basebody %}
+<br><br>
+<div class="container text-center homeTable">
+{% for f in forums %}
+<a href="/{{ f.name|lower }}" class="phoneText" style="row">[{{ f.short|upper }}]</a>
+{% endfor %}
+</div>
+{% endblock %}
