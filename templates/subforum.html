@@ -6,12 +6,44 @@
 </script>
 {% endif %}
 <script>
-    $SCRIPT_ROOT = {{ request.script_root|tojson }};
-    $("button#refreshBtn").click(function() {
-        $.getJSON($SCRIPT_ROOT + "/_get_threads/{{ subName|lower }}", function() {
-            $.each(result, function(i, field) {
-               $("#result").append(field + " ");
+    $(document).ready(function(){
+        $SCRIPT_ROOT = {{ request.script_root|tojson }};
+
+        function fetchThreads() {
+            $.getJSON($SCRIPT_ROOT + "/_get_threads/{{ subName|lower }}", function(data) {
+                document.getElementById("threadDiv").textContent = '';
+                for(var i = 0; i < data.length; i++) {
+                    let tdiv = document.createElement("a");
+                    tdiv.setAttribute("href", $SCRIPT_ROOT + "/{{ subName|lower }}/" + data[i].id);
+                    tdiv.classList.add("row");
+                    tdiv.classList.add("post");
+                    tdiv.classList.add("phoneText");
+                    let mdiv = document.createElement("div");
+                    tdiv.appendChild(mdiv);
+                    let tp = document.createElement("div");
+                    tp.classList.add("postText");
+                    if (data[i].media != "None") {
+                        let timg = document.createElement("img");
+                        timg.setAttribute("alt", "nahlad");
+                        timg.classList.add("postImage");
+                        timg.src= $SCRIPT_ROOT + "/static/media/" + data[i].media;
+                        mdiv.appendChild(timg);
+                    }
+                    mdiv.appendChild(tp);
+                    let node = document.createTextNode(data[i].message);
+                    tp.appendChild(node);
+                    tdate = document.createElement("p");
+                    tdate.innerText = "[Čas vytvorenia:" + data[i].date + "]";
+                    tdiv.appendChild(tdate);
+                    document.getElementById("threadDiv").appendChild(tdiv);
+                }
             });
+        };
+
+        fetchThreads();
+
+        $("button#refreshBtn").click(function() {
+            fetchThreads();
         });
     });
 </script>
@@ -34,7 +66,10 @@
         </form>
     </div><br>
     <br><br>
-    <span id="result"></span>
+    <div id="threadDiv" class="container text-center">
+
+    </div>
     <br><br>
     <button id="refreshBtn" type="button" class="formContentPhone centered">Refresh</button>
+    <br>
 {% endblock %}

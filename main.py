@@ -9,7 +9,7 @@ from logging.handlers import RotatingFileHandler
 from time import strftime
 from flask import Flask, render_template, request, redirect, session
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import String, Boolean, Integer, DateTime, select, table, column
+from sqlalchemy import String, Boolean, Integer, DateTime, select, table, column, desc, asc
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
@@ -83,13 +83,17 @@ def home():
 @app.route("/_get_threads/<string:sub_name>")
 def get_threads(sub_name):
     threads = []
-    sub_forum = SubForum.query.filter_by(name=sub_name.lower()).first()
-    response = Thread.query.filter_by(subforum_id=sub_forum.id).all()
+    try:
+        sub_forum = SubForum.query.filter_by(name=sub_name.lower()).first()
+        response = Thread.query.order_by(desc(Thread.date)).filter_by(subforum_id=sub_forum.id).all()
+    except:
+        return jsonify(threads)
     for r in response:
-        threads.append({'id': str(r.id), 'subforum_id': str(r.subforum_id), 'main_post_id': str(r.main_post_id),
-                        'date': str(r.date)})
-    print(threads)
-    return jsonify({'result': threads})
+        if r.main_post_id is not None:
+            main_post = Post.query.filter_by(id=r.main_post_id).first()
+            threads.append({'id': str(r.id), 'subforum_id': str(r.subforum_id), 'message': str(main_post.message),
+                            'media': str(main_post.media), 'date': str(r.date)})
+    return jsonify(threads)
 
 
 @app.route("/<string:sub_name>")
@@ -98,6 +102,37 @@ def subforum(sub_name):
     if check is None:
         flask.abort(404)
     return render_template('subforum.html', subName=sub_name.upper())
+
+
+@app.route("/_get_posts/<string:sub_name>/<string:thread_id>")
+def get_posts(sub_name, thread_id):
+    response = []
+    posts = Post.query.order_by(asc(Post.date)).filter_by(thread_id=thread_id).all()
+    for p in posts:
+        response.append({
+            'id': str(p.id), 'thread_id': str(p.thread_id), 'message': str(p.message), 'media': str(p.media),
+            'date': str(p.date)
+        })
+    return jsonify(response)
+
+
+@app.route("/<string:sub_name>/<string:thread_id>/create_post", methods=["GET", "POST"])
+def post(sub_name, thread_id):
+    check1 = SubForum.query.filter_by(name=sub_name).first()
+    check2 = Thread.query.filter_by(id=thread_id).first()
+    if check1 is None or check2 is None:
+        flask.abort(404)
+    if request.method == 'POST':
+        if request.form["message"] == '' and len(request.files) <= 0:
+            return render_template('thread.html', sub_name=sub_name.upper(), thread_id=thread_id, hasErr=True,
+                                   errCode=13)
+        create_post(request.form['message'], thread_id, request.files['file'])
+    return redirect(f'/{sub_name.lower()}/{thread_id}')
+
+
+@app.route("/<string:sub_name>/<string:thread_id>")
+def thread(sub_name, thread_id):
+    return render_template('thread.html', sub_name=sub_name.upper(), thread_id=thread_id)
 
 
 @app.route("/admin/create_sub", methods=["GET", "POST"])
@@ -158,11 +193,6 @@ def create_post(message, thread_id, f):
     return new_post.id
 
 
-@app.route("/post", methods=["GET", "POST"])
-def post():
-    pass
-
-
 @app.route("/<string:sub_name>/create_thread", methods=["GET", "POST"])
 def create_thread(sub_name):
     check = SubForum.query.filter_by(name=sub_name).first()
@@ -175,7 +205,7 @@ def create_thread(sub_name):
         new_thread = Thread(subforum_id=_sub_forum.id)
         db.session.add(new_thread)
         db.session.commit()
-        _sub_forum.main_post_id = create_post(request.form["message"], _sub_forum.id, request.files['file'])
+        new_thread.main_post_id = create_post(request.form["message"], new_thread.id, request.files['file'])
         db.session.commit()
     return redirect(f"/{sub_name}")
 

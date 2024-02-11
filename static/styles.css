@@ -143,6 +143,8 @@ button.expandNav {
     padding:15px;
     margin:20px;
     text-align:left;
+    text-decoration: none;
+    color: black;
 }
 
 .postTitle{
@@ -154,12 +156,17 @@ button.expandNav {
 img.postImage{
     width:20%;
     height:auto;
-    float:right;
+    float:left;
+    margin-right: 20px;
 }
 
 .submitPost{
     display: flex;
     justify-content: center;
+}
+
+.postText {
+    margin-left: 0px;
 }
 
 .submitBorder{

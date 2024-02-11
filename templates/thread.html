@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block basehead %}
+{% if hasErr %}
+<script>
+    error_handler({{ errCode }});
+</script>
+{% endif %}
+<script>
+    $(document).ready(function(){
+        $SCRIPT_ROOT = {{ request.script_root|tojson }};
+
+        $("button#refreshBtn").click(function() {
+        });
+    });
+</script>
+{% endblock %}
+{% block basebody %}
+    <button id="show_thread_form_btn" type="button" class="formContentPhone centered" onclick="show_hide_thread_form();"
+    >[Nové vlákno]</button>
+    <div class="submitPost phoneText" id="thread_form_div" style="display: none;">
+        <form class="submitBorder" id="new_thread_form" method="POST" enctype="multipart/form-data"
+              action="/{{ sub_name|lower }}/{{ thread_id }}/create_post">
+            <button type="button" class="formContentPhone" onclick="show_hide_thread_form();">[X]</button><br>
+            <label for="message">Správa</label><br>
+            <textarea id="message" name="message" rows="5" cols="40" placeholder="Sem píš..." style="resize:none;"></textarea>
+            <br>
+            <label class="formContentPhone">Media</label><br>
+            <input class="formContentPhone" type="file" id="file" name="file" accept=".gif,.jpg,.jpeg,.png"/><br><br>
+            <br>
+            <button type="button" class="formContentPhone" onclick="create_thread();">Vytvoriť</button>
+        </form>
+    </div><br>
+    <br><br>
+    <div id="threadDiv" class="container text-center">
+
+    </div>
+    <br><br>
+    <button id="refreshBtn" type="button" class="formContentPhone centered">Refresh</button>
+    <br>
+{% endblock %}
